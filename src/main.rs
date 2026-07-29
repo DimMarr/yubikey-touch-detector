@@ -1,3 +1,4 @@
+mod assuan;
 mod bus;
 mod config;
 mod message;
