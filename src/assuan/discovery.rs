@@ -58,6 +58,30 @@ pub fn agent_socket_path() -> Option<PathBuf> {
     )
 }
 
+/// Pure decision logic for locating the GnuPG home directory (which
+/// contains `private-keys-v1.d/`), mirroring the same
+/// `gpgconf` > `$GNUPGHOME` > conventional-default priority used for the
+/// agent socket.
+fn resolve_homedir(
+    gpgconf_homedir: Option<PathBuf>,
+    gnupghome_env: Option<&str>,
+    home_env: Option<&str>,
+) -> Option<PathBuf> {
+    gpgconf_homedir
+        .or_else(|| gnupghome_env.map(PathBuf::from))
+        .or_else(|| home_env.map(|home| PathBuf::from(home).join(".gnupg")))
+}
+
+/// Locates the GnuPG home directory, trying `gpgconf` first and falling
+/// back to `$GNUPGHOME` then `$HOME/.gnupg`.
+pub fn homedir() -> Option<PathBuf> {
+    resolve_homedir(
+        run_gpgconf_list_dirs("homedir"),
+        std::env::var("GNUPGHOME").ok().as_deref(),
+        std::env::var("HOME").ok().as_deref(),
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -116,5 +140,32 @@ mod tests {
     #[test]
     fn non_utf8_gpgconf_output_is_treated_as_unavailable() {
         assert_eq!(parse_gpgconf_path(&[0xff, 0xfe, 0xfd]), None);
+    }
+
+    #[test]
+    fn homedir_prefers_gpgconf_result_over_any_fallback() {
+        let resolved = resolve_homedir(
+            Some(PathBuf::from("/home/user/.gnupg")),
+            Some("/other/gnupghome"),
+            Some("/home/user"),
+        );
+        assert_eq!(resolved, Some(PathBuf::from("/home/user/.gnupg")));
+    }
+
+    #[test]
+    fn homedir_falls_back_to_gnupghome_env() {
+        let resolved = resolve_homedir(None, Some("/other/gnupghome"), Some("/home/user"));
+        assert_eq!(resolved, Some(PathBuf::from("/other/gnupghome")));
+    }
+
+    #[test]
+    fn homedir_falls_back_to_home_dot_gnupg() {
+        let resolved = resolve_homedir(None, None, Some("/home/user"));
+        assert_eq!(resolved, Some(PathBuf::from("/home/user/.gnupg")));
+    }
+
+    #[test]
+    fn homedir_none_when_nothing_is_available() {
+        assert_eq!(resolve_homedir(None, None, None), None);
     }
 }

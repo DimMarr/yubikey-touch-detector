@@ -1,6 +1,7 @@
 mod assuan;
 mod bus;
 mod config;
+mod detector;
 mod message;
 mod shutdown;
 
