@@ -10,6 +10,11 @@ readme = "README.md"
 keywords = ["yubikey", "gpg", "u2f", "fido2", "notification"]
 categories = ["command-line-utilities", "hardware-support"]
 
+[profile.dist]
+# Build profile cargo-dist uses for release archives (see dist-workspace.toml).
+inherits = "release"
+lto = "thin"
+
 [dependencies]
 anyhow = "1.0.104"
 clap = { version = "4.6.4", features = ["derive", "env"] }
@@ -26,3 +31,62 @@ zbus = "5.18.0"
 [dev-dependencies]
 tempfile = "3.27.0"
 tokio = { version = "1.53.1", features = ["test-util"] }
+
+# Debian/Ubuntu packaging (`cargo install cargo-deb && cargo deb`).
+#
+# Verified against cargo-deb 3.7.0's own documented `[package.metadata.deb]`
+# schema (https://github.com/kornelski/cargo-deb#optional-configuration) and
+# by actually running `cargo deb --no-strip` from the repo root, which
+# produced a valid target/debian/yubikey-touch-detector_*.deb.
+[package.metadata.deb]
+name = "yubikey-touch-detector"
+maintainer = "Dimitri Martel <martel.dimitri34@gmail.com>"
+copyright = "2026, Dimitri Martel <martel.dimitri34@gmail.com>"
+section = "utils"
+priority = "optional"
+extended-description = """\
+Detects when a YubiKey is waiting for a physical touch confirmation (GPG, \
+U2F/FIDO2, or HMAC-SECRET) and notifies other programs about it over a unix \
+socket, D-Bus, libnotify desktop notifications, or stdout.
+.
+This is a from-scratch Rust rewrite of maximbaz/yubikey-touch-detector. \
+Unlike the original Go implementation, it does not link libgpgme/gpgme-devel \
+at all: the gpg-agent Assuan protocol bits it needs are reimplemented \
+natively in Rust (see src/assuan/), so this package has no gpgme-related \
+build or runtime dependency whatsoever."""
+
+# zbus (used for the D-Bus notifier/detector) is a pure-Rust implementation
+# of the D-Bus wire protocol - it does NOT link libdbus, so no libdbus*
+# runtime dependency is required here (unlike C/C++ D-Bus clients). A running
+# session bus is still needed at runtime, but that's provided by the desktop
+# environment/session manager, not something apt can express as a `Depends`
+# on a headless-safe package, so we deliberately don't declare one. Leaving
+# `depends` unset (equivalent to `"$auto"`) lets cargo-deb populate it from
+# the actual shared-library dependencies of the compiled binary (libc6 and
+# friends), which is all this package genuinely needs.
+depends = "$auto"
+
+# The man page ships as scdoc source (yubikey-touch-detector.1.scd), not
+# roff/troff. cargo-deb's `assets` mechanism only copies files verbatim - it
+# has no build-step/pre-build hook to run `scdoc` first (confirmed: as of
+# 3.7.0 there is no such option in its documented schema; `maintainer-scripts`
+# only covers dpkg preinst/postinst/prerm/postrm, not a package build step).
+# Rather than ship the raw .scd source into /usr/share/man (which must
+# contain roff, not scdoc), the man page is simply not packaged by cargo-deb
+# for now. Fedora and Arch packaging (see packaging/) both render it with
+# `scdoc` at build time and do not have this limitation.
+assets = [
+    { source = "target/release/yubikey-touch-detector", dest = "usr/bin/", mode = "755" },
+    { source = "yubikey-touch-detector.service", dest = "usr/lib/systemd/user/", mode = "644" },
+    { source = "yubikey-touch-detector.socket", dest = "usr/lib/systemd/user/", mode = "644" },
+    { source = "README.md", dest = "usr/share/doc/yubikey-touch-detector/README.md", mode = "644" },
+    { source = "LICENSE-MIT", dest = "usr/share/doc/yubikey-touch-detector/LICENSE-MIT", mode = "644" },
+    { source = "LICENSE-APACHE", dest = "usr/share/doc/yubikey-touch-detector/LICENSE-APACHE", mode = "644" },
+    { source = "service.conf.example", dest = "usr/share/doc/yubikey-touch-detector/examples/service.conf.example", mode = "644" },
+]
+# Deliberately NOT using [package.metadata.deb.systemd-units]: that feature
+# (see https://github.com/kornelski/cargo-deb/blob/main/systemd.md) is built
+# for *system* units - it installs to lib/systemd/system/, and its generated
+# maintainer-script fragments call `systemctl --system`/deb-systemd-helper,
+# none of which apply to a systemd --user unit. The units are installed as
+# plain assets above instead, matching the Fedora and Arch packaging.
