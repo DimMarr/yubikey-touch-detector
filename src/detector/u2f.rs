@@ -242,6 +242,9 @@ mod tests {
     #[test]
     fn short_payload_does_not_panic() {
         assert_eq!(classify_ctaphid_report(&[]), (false, false));
-        assert_eq!(classify_ctaphid_report(&[0, 0, 0, 0, CTAPHID_MSG]), (false, false));
+        assert_eq!(
+            classify_ctaphid_report(&[0, 0, 0, 0, CTAPHID_MSG]),
+            (false, false)
+        );
     }
 }
