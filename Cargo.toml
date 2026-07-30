@@ -13,6 +13,7 @@ categories = ["command-line-utilities", "hardware-support"]
 [dependencies]
 anyhow = "1.0.104"
 clap = { version = "4.6.4", features = ["derive", "env"] }
+futures-util = "0.3.33"
 inotify = { version = "0.11.4", features = ["stream"] }
 libc = "0.2.189"
 nix = { version = "0.31.3", features = ["ioctl", "poll"] }
