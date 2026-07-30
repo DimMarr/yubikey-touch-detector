@@ -3,6 +3,7 @@ mod bus;
 mod config;
 mod detector;
 mod message;
+mod notifier;
 mod shutdown;
 
 use tracing_subscriber::EnvFilter;
