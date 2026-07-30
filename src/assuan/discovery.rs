@@ -36,7 +36,9 @@ fn parse_gpgconf_path(raw_stdout: &[u8]) -> Option<PathBuf> {
     }
 }
 
-fn run_gpgconf_list_dirs(key: &str) -> Option<PathBuf> {
+/// `pub(crate)`: also reused by the SSH forwarded-agent detector, which
+/// needs `gpgconf --list-dirs agent-ssh-socket` in its own fallback chain.
+pub(crate) fn run_gpgconf_list_dirs(key: &str) -> Option<PathBuf> {
     let output = Command::new("gpgconf")
         .arg("--list-dirs")
         .arg(key)
