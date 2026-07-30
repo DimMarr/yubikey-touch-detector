@@ -8,7 +8,12 @@ use clap::Parser;
 use clap::builder::BoolishValueParser;
 
 #[derive(Parser, Debug, Clone)]
-#[command(name = "yubikey-touch-detector", version, about, long_about = None)]
+#[command(
+    name = "yubikey-touch-detector",
+    version = env!("YUBIKEY_TOUCH_DETECTOR_VERSION"),
+    about,
+    long_about = None
+)]
 struct CliArgs {
     /// Enable debug logging
     #[arg(

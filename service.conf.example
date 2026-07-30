@@ -1,0 +1,15 @@
+# enable debug logging
+YUBIKEY_TOUCH_DETECTOR_VERBOSE=false
+
+# desktop notifications via libnotify are enabled by default; set to false
+# (or pass --no-libnotify) to disable them
+YUBIKEY_TOUCH_DETECTOR_LIBNOTIFY=true
+
+# print notifications to stdout
+YUBIKEY_TOUCH_DETECTOR_STDOUT=false
+
+# disable the unix socket notifier
+YUBIKEY_TOUCH_DETECTOR_NOSOCKET=false
+
+# enable the custom D-Bus server notifier (io.github.dimmarr.YubikeyTouchDetector)
+YUBIKEY_TOUCH_DETECTOR_DBUS=false
