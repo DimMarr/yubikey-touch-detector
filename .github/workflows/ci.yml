@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: cargo fmt --all -- --check
+
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # A handful of notifier tests exercise a real D-Bus session bus
+      # (registering our own service, reading properties back, sending a
+      # real desktop notification) and skip gracefully when none is
+      # available. dbus-run-session gives them a real private bus to run
+      # against instead of silently skipping in CI.
+      - name: Install dbus (for dbus-run-session)
+        run: sudo apt-get update && sudo apt-get install -y dbus
+      - name: Run tests under a private D-Bus session
+        run: dbus-run-session -- cargo test --all-features
+
+  # Native x86_64 build+test above is the real gate; this is a lighter
+  # secondary signal that nothing target-specific has crept in for the
+  # other Tier 1 Linux target this project cares about. cargo check (not
+  # build) avoids needing an aarch64 cross-linker just for CI type-checking.
+  check-aarch64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo check --all-targets --target aarch64-unknown-linux-gnu
