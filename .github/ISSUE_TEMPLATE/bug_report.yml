@@ -1,0 +1,81 @@
+name: Bug report
+description: Report a problem with yubikey-touch-detector
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: What did you do, step by step?
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: verbose-log
+    attributes:
+      label: Verbose log output
+      description: >
+        Please run `yubikey-touch-detector -v` (or set
+        `YUBIKEY_TOUCH_DETECTOR_VERBOSE=true`) and paste the relevant output
+        here.
+      render: shell
+
+  - type: input
+    id: yubikey-model
+    attributes:
+      label: YubiKey model
+      placeholder: e.g. YubiKey 5C NFC
+    validations:
+      required: true
+
+  - type: input
+    id: distro
+    attributes:
+      label: Linux distribution
+      placeholder: e.g. Fedora 42, Ubuntu 24.04, Arch
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-source
+    attributes:
+      label: Install source
+      options:
+        - COPR
+        - AUR
+        - .deb (GitHub Releases)
+        - cargo install
+        - Other (please specify in the description)
+    validations:
+      required: true
