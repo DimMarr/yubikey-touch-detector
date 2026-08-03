@@ -20,11 +20,9 @@ depends=()
 makedepends=('cargo' 'scdoc')
 
 source=("$pkgname-$pkgver.tar.gz::https://github.com/DimMarr/yubikey-touch-detector/archive/v$pkgver.tar.gz")
-# Placeholder: v$pkgver doesn't exist yet as a real GitHub release/tag, so a
-# real checksum can't be computed. Replace with the actual sha256sum of the
-# release tarball (e.g. via `updpkgsums`) once v$pkgver is tagged and
-# published.
-sha256sums=('REPLACE_WITH_REAL_SHA256')
+# sha256sum of the v0.1.0 GitHub Release source archive, verified by
+# downloading it directly. Re-run `updpkgsums` whenever pkgver is bumped.
+sha256sums=('5998f6a687fd988c16043c9adf32459b6c02fcb7e2a9a2ee5de37eca0c9914e7')
 
 # Cargo.lock is already tracked in this repo, which is what makes
 # `--locked` below reproducible: every dependency version is pinned exactly
