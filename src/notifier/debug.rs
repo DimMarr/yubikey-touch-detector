@@ -1,13 +1,11 @@
 //! Debug-log notifier: logs every [`Message`](crate::message::Message) at
-//! debug level. In the original Go implementation this notifier only ran
-//! when verbose logging was on; here that's a `main.rs`-level decision
-//! (whether to spawn this at all, based on `Config.verbose`) rather than
-//! something this module checks itself.
+//! debug level. Whether to spawn this at all is a `main.rs`-level decision
+//! based on `Config.verbose`, rather than something this module checks
+//! itself.
 //!
 //! Like the per-device U2F reader threads, this task is simply abandoned at
 //! process exit - it's not part of the critical shutdown set (only the SSH
-//! proxy and the unix socket notifier get graceful cleanup, matching the
-//! original).
+//! proxy and the unix socket notifier get graceful cleanup).
 
 use tracing::debug;
 

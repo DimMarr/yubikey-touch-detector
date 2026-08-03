@@ -1,8 +1,7 @@
 //! A minimal pure-Rust Assuan protocol client: just enough to send a
 //! command to gpg-agent (only `LEARN` is used, to busy-check the card) and
-//! read back its terminating status line. This is the entire reason for
-//! the rewrite: it removes the `libgpgme`/`gpgme-devel` C build dependency
-//! that motivated replacing the original Go tool's `gpgme` binding.
+//! read back its terminating status line. This removes the
+//! `libgpgme`/`gpgme-devel` C build dependency entirely.
 //!
 //! Assuan is a simple newline-delimited text protocol: the server sends a
 //! greeting line on connect, the client sends a command line, and the
@@ -10,17 +9,16 @@
 //! terminating `OK` or `ERR <code> <description>` line. A server may also
 //! send `INQUIRE <keyword>` mid-response to ask the client for more data;
 //! since `LEARN` needs none, this client always answers with an empty
-//! `END` (matching the original Go implementation's no-op inquiry
-//! callback).
+//! `END`.
 //!
 //! Deliberately **not** built on `tokio::time::timeout` around the whole
 //! exchange: the caller (the GPG detector) needs to race the exchange
 //! against a short "is the card busy" timer without aborting the exchange
-//! itself when that timer fires, since the original Go behavior lets the
-//! real Assuan round trip run to completion in the background and only
-//! uses the timer to decide *whether to notify*, not whether to cancel.
-//! `send_command` therefore runs to true completion; the detector spawns
-//! it and races a timeout against the `JoinHandle` instead.
+//! itself when that timer fires, so the real Assuan round trip keeps
+//! running to completion in the background and the timer only decides
+//! *whether to notify*, not whether to cancel. `send_command` therefore
+//! runs to true completion; the detector spawns it and races a timeout
+//! against the `JoinHandle` instead.
 
 pub mod discovery;
 
@@ -136,8 +134,8 @@ impl AssuanClient {
                 }
                 LineKind::Inquire => self.write_line("END").await?,
                 LineKind::DataStatusOrComment => {
-                    // Ignored: the original Go inquiry/status callback is a
-                    // no-op too, it only logs.
+                    // Ignored: data/status lines carry nothing this client
+                    // needs, so they're only logged, not acted on.
                 }
             }
         }

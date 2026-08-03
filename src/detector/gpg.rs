@@ -2,7 +2,7 @@
 //! smartcard is busy (a `LEARN` Assuan command to gpg-agent hangs), it is
 //! assumed to be waiting for a touch. This produces false positives when
 //! the card is busy for unrelated reasons, but is a good heuristic in
-//! practice (same approach as the original Go implementation).
+//! practice.
 //!
 //! To avoid running the busy check continuously (which would keep the
 //! YubiKey blinking), it only runs after one of the `private-keys-v1.d/*`
@@ -58,7 +58,7 @@ pub fn find_shadowed_private_keys(private_keys_dir: &Path) -> io::Result<Vec<Pat
 /// via `notify`) and for `DELETE_SELF`/`MOVE_SELF` events, which mean
 /// gpg-agent rewrote the file out from under the watch; in that case every
 /// watch is torn down and re-established (after a short delay) on the same
-/// file list, matching the original implementation.
+/// file list.
 pub async fn watch_for_touch_requests(
     files: Vec<PathBuf>,
     notify: Arc<Notify>,
@@ -150,12 +150,10 @@ async fn reconnect(agent_socket: &Path) -> Option<AssuanClient> {
 /// `tokio::time::timeout` (which would cancel it): the check is spawned as
 /// its own task and raced against a timeout on the `JoinHandle` instead, so
 /// that when the timeout fires first, the real exchange keeps running in
-/// the background to completion (matching the original implementation,
-/// which lets the real Assuan round trip finish and only uses a timer to
-/// decide whether to notify). Errors from the exchange are only logged
-/// when it actually ran past the busy-check timeout — a fast, successful
-/// round trip that happens to return an error is silently ignored, exactly
-/// as in the original.
+/// the background to completion and only the timer decides whether to
+/// notify. Errors from the exchange are only logged when it actually ran
+/// past the busy-check timeout — a fast, successful round trip that
+/// happens to return an error is silently ignored.
 pub async fn check_on_request(agent_socket: PathBuf, notify: Arc<Notify>, bus: Bus) {
     let mut client = match reconnect(&agent_socket).await {
         Some(client) => client,
@@ -175,7 +173,7 @@ pub async fn check_on_request(agent_socket: PathBuf, notify: Arc<Notify>, bus: B
             Ok(Ok((returned_client, _result))) => {
                 // Completed within the busy-check window: the card wasn't
                 // actually waiting for a touch. Any error here is silently
-                // dropped, matching the original.
+                // dropped.
                 client = returned_client;
             }
             Ok(Err(join_err)) => {
@@ -215,8 +213,8 @@ pub async fn check_on_request(agent_socket: PathBuf, notify: Arc<Notify>, bus: B
 /// checker tasks and returns the shared [`Notify`] handle so other
 /// detectors (the SSH forwarded-agent proxy) can trigger the same busy
 /// check. Returns `None` (leaving GPG touch detection disabled) if
-/// anything required isn't available, mirroring the original
-/// implementation's graceful degradation.
+/// anything required isn't available, degrading gracefully rather than
+/// failing.
 pub fn try_init(bus: Bus, shutdown: CancellationToken) -> Option<Arc<Notify>> {
     let homedir = assuan::discovery::homedir().or_else(|| {
         debug!("cannot determine GnuPG homedir, disabling GPG and SSH watchers");

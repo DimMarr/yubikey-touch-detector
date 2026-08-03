@@ -33,8 +33,7 @@ nix::ioctl_read!(hidiocgrdesc, b'H', 0x02, HidrawReportDescriptor);
 /// Opens `device_path` and checks whether its HID report descriptor
 /// declares the FIDO usage page and CTAPHID usage. Returns `false` (rather
 /// than propagating an error) for any device that isn't a readable hidraw
-/// node or doesn't support these ioctls, matching the original
-/// implementation's "best-effort guess, never fatal" approach.
+/// node or doesn't support these ioctls: a best-effort guess, never fatal.
 pub fn is_fido_u2f_device(device_path: &Path) -> bool {
     if !device_path.to_string_lossy().starts_with("/dev/hidraw") {
         return false;
@@ -68,16 +67,16 @@ pub fn is_fido_u2f_device(device_path: &Path) -> bool {
 /// Pure HID item-stream walk, kept separate from any ioctl/file I/O so it's
 /// unit-testable against fixture byte arrays.
 ///
-/// Deliberately mirrors the original implementation's simplified item walk
-/// rather than a fully spec-compliant HID item parser: it treats each
-/// item's 2-bit size code (0..3) as a literal byte count. That's exact for
-/// the two items being matched here (a 2-byte Usage Page value and a
-/// 1-byte Usage value both use size codes that equal their byte count),
-/// even though HID's actual encoding maps size code `3` to 4 bytes, not 3.
-/// Preserved as-is for behavioral parity rather than "fixed", since it's a
-/// heuristic either way. Byte access beyond the slice is treated as `0`
-/// rather than panicking, since a real report descriptor is not adversarial
-/// input but shouldn't be able to crash a long-running background thread.
+/// Deliberately a simplified item walk rather than a fully spec-compliant
+/// HID item parser: it treats each item's 2-bit size code (0..3) as a
+/// literal byte count. That's exact for the two items being matched here
+/// (a 2-byte Usage Page value and a 1-byte Usage value both use size codes
+/// that equal their byte count), even though HID's actual encoding maps
+/// size code `3` to 4 bytes, not 3. Left simplified rather than made fully
+/// spec-compliant, since it's a heuristic either way. Byte access beyond
+/// the slice is treated as `0` rather than panicking, since a real report
+/// descriptor is not adversarial input but shouldn't be able to crash a
+/// long-running background thread.
 fn descriptor_declares_fido_ctaphid(descriptor: &[u8]) -> bool {
     let mut is_fido = false;
     let mut has_u2f = false;

@@ -1,5 +1,4 @@
-# Fedora/COPR spec for yubikey-touch-detector, a from-scratch Rust rewrite of
-# maximbaz/yubikey-touch-detector.
+# Fedora/COPR spec for yubikey-touch-detector.
 #
 # Packaged following the Fedora Rust Packaging Guidelines' macro-based
 # approach for a Rust *application* (own package name, not `rust-%%{crate}`
@@ -53,14 +52,12 @@ BuildRequires:  scdoc
 # Provides %%{_userunitdir} (/usr/lib/systemd/user).
 BuildRequires:  systemd-rpm-macros
 
-# --- The whole point of this Rust rewrite, packaging-wise ---
+# --- No gpgme dependency, by design ---
 # No BuildRequires/Requires on gpgme or gpgme-devel anywhere in this spec.
-# The original Go yubikey-touch-detector links libgpgme via cgo to talk to
-# gpg-agent, which is precisely why it was never packaged for Fedora: gpgme's
-# build/link story is unfriendly to straightforward COPR/Fedora packaging.
-# This rewrite reimplements the small slice of the Assuan protocol it needs
-# in pure Rust (see src/assuan/ upstream), so gpgme never enters the
-# dependency graph here at all.
+# gpgme's build/link story is unfriendly to straightforward COPR/Fedora
+# packaging, so this package implements the small slice of the Assuan
+# protocol it needs in pure Rust (see src/assuan/), and gpgme never enters
+# the dependency graph here at all.
 
 %description
 %{summary}.
@@ -107,4 +104,4 @@ install -Dpm0644 %{name}.socket %{buildroot}%{_userunitdir}/%{name}.socket
 
 %changelog
 * Wed Jul 29 2026 Dimitri Martel <martel.dimitri34@gmail.com> - 0.1.0-1
-- Initial packaging of the Rust rewrite (no gpgme/gpgme-devel dependency).
+- Initial packaging (no gpgme/gpgme-devel dependency).

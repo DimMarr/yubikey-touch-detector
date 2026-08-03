@@ -97,9 +97,7 @@ ykman(1), pam_u2f(8)
 
 # AUTHORS
 
-Rust rewrite maintained by Dimitri Martel <https://github.com/DimMarr/yubikey-touch-detector>,
-based on the design of the original Go implementation by Maxim Baz
-<https://github.com/maximbaz/yubikey-touch-detector>.
+Maintained by Dimitri Martel <https://github.com/DimMarr/yubikey-touch-detector>.
 
 # LICENSE
 

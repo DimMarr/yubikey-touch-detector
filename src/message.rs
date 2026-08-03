@@ -1,5 +1,5 @@
-//! Wire protocol shared with the original Go implementation: every event is
-//! a fixed 5-byte ASCII message broadcast to all connected consumers.
+//! Wire protocol for the unix socket notifier: every event is a fixed
+//! 5-byte ASCII message broadcast to all connected consumers.
 
 use std::fmt;
 
@@ -14,8 +14,8 @@ pub enum Message {
 }
 
 impl Message {
-    /// The fixed 5-byte wire representation, unchanged from the original
-    /// project so existing consumers (py3status, waybar, ...) keep working.
+    /// The fixed 5-byte wire representation. Kept stable so existing
+    /// consumers (py3status, waybar, ...) keep working.
     pub const fn wire_bytes(self) -> &'static [u8; 5] {
         match self {
             Message::GpgOn => b"GPG_1",
@@ -45,7 +45,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn wire_bytes_match_original_protocol() {
+    fn wire_bytes_match_the_documented_protocol() {
         assert_eq!(Message::GpgOn.wire_bytes(), b"GPG_1");
         assert_eq!(Message::GpgOff.wire_bytes(), b"GPG_0");
         assert_eq!(Message::U2fOn.wire_bytes(), b"U2F_1");

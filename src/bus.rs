@@ -1,12 +1,11 @@
 //! Fan-out of [`Message`] from detectors to notifiers.
 //!
-//! Replaces the Go original's `sync.Map<string, chan Message>` (a bounded
-//! channel per notifier, filled by iterating the map on every detector
-//! event). That design head-of-line blocks: once any one notifier's buffer
-//! fills, every detector blocks on it before the others can be notified.
-//! `tokio::sync::broadcast` decouples this: a lagging receiver only misses
-//! its own messages (and logs it), it never blocks the sender or the other
-//! receivers.
+//! Built on `tokio::sync::broadcast` rather than a bounded channel per
+//! notifier: a per-notifier bounded channel would head-of-line block once
+//! any one notifier's buffer fills, stalling every detector before the
+//! others can be notified. `broadcast` decouples this: a lagging receiver
+//! only misses its own messages (and logs it), it never blocks the sender
+//! or the other receivers.
 
 use tokio::sync::broadcast;
 use tracing::warn;

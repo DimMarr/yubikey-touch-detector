@@ -9,14 +9,12 @@ url="https://github.com/DimMarr/yubikey-touch-detector"
 # since MIT and Apache-2.0 are both in Arch's standard license list.
 license=('MIT' 'Apache-2.0')
 
-# Deliberately empty: this Rust rewrite has NO runtime C library
-# dependencies. In particular there is no `gpgme` dependency, unlike what an
-# AUR package for the original Go-based maximbaz/yubikey-touch-detector would
-# have needed (it links libgpgme via cgo to talk to gpg-agent). This rewrite
-# reimplements the small slice of the Assuan protocol it needs natively in
-# Rust (see src/assuan/ upstream), so gpgme never enters the picture. The
-# D-Bus notifier/detector uses zbus, a pure-Rust D-Bus implementation that
-# doesn't link libdbus either.
+# Deliberately empty: this package has NO runtime C library dependencies.
+# In particular there is no `gpgme` dependency: the small slice of the
+# Assuan protocol it needs to talk to gpg-agent is implemented natively in
+# Rust (see src/assuan/), so gpgme never enters the picture. The D-Bus
+# notifier/detector uses zbus, a pure-Rust D-Bus implementation that doesn't
+# link libdbus either.
 depends=()
 
 makedepends=('cargo' 'scdoc')
@@ -30,7 +28,7 @@ sha256sums=('REPLACE_WITH_REAL_SHA256')
 
 # Cargo.lock is already tracked in this repo, which is what makes
 # `--locked` below reproducible: every dependency version is pinned exactly
-# to what was tested upstream. AUR builds (unlike Arch's official
+# to what was tested during development. AUR builds (unlike Arch's official
 # core/extra repositories) are explicitly allowed network access during
 # `makepkg` - see https://wiki.archlinux.org/title/Arch_package_guidelines -
 # so there's no need for a vendoring step here; `cargo build --locked` will

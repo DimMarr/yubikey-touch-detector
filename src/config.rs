@@ -1,8 +1,7 @@
-//! CLI/env configuration, mirroring the original Go flag+env-var precedence
-//! (CLI arg > env var > default) with one deliberate behavior change: the
-//! `libnotify` desktop-notification notifier now defaults to **on** instead
-//! of requiring an opt-in flag, since that opt-in was the actual usability
-//! complaint that motivated this rewrite.
+//! CLI/env configuration, with precedence CLI arg > env var > default. The
+//! `libnotify` desktop-notification notifier defaults to **on**, so
+//! touch-wait notifications work without needing to discover an opt-in
+//! flag first.
 
 use clap::Parser;
 use clap::builder::BoolishValueParser;

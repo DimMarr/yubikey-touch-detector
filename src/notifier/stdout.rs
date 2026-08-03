@@ -1,7 +1,6 @@
 //! Stdout notifier: prints every [`Message`](crate::message::Message) as its
 //! own line, using the wire-format string (`GPG_1`, `U2F_0`, ...) via
-//! `Message`'s `Display` impl - matching the original Go implementation's
-//! `fmt.Println(value)`.
+//! `Message`'s `Display` impl.
 //!
 //! Same "no shutdown handling" reasoning as `notifier::debug`: this task is
 //! abandoned at process exit rather than joined during graceful shutdown.

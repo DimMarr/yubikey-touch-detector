@@ -23,7 +23,7 @@ use crate::bus::Bus;
 use crate::message::Message;
 
 /// Newly created devices are given this long to finish initializing before
-/// being checked, matching the original implementation.
+/// being checked.
 const DEVICE_SETTLE_DELAY: Duration = Duration::from_secs(1);
 /// After a device disappears, wait this long before deciding the new
 /// on/off state, absorbing rapid back-to-back device churn.
@@ -97,7 +97,7 @@ pub async fn watch(bus: Bus, shutdown: CancellationToken) {
                 match event {
                     Some(Ok(ev)) if ev.mask.contains(EventMask::CREATE) => {
                         // Any /dev creation cancels a pending debounce, not
-                        // just a YubiKey one - matches the original.
+                        // just a YubiKey one.
                         remove_deadline = None;
                         if let Some(name) = ev.name {
                             let path = PathBuf::from("/dev").join(name);

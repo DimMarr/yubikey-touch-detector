@@ -79,10 +79,9 @@ fn restore_original(original_path: &Path, socket_path: &Path) {
 }
 
 /// Forwards bytes from `reader` to `writer`, notifying `notify` after every
-/// chunk successfully forwarded (mirroring the original Go implementation,
-/// which busy-checks on any traffic seen in either direction, not just once
-/// per connection). Returns once the connection is closed or errors in
-/// either direction.
+/// chunk successfully forwarded, so the busy check triggers on any traffic
+/// seen in either direction, not just once per connection. Returns once
+/// the connection is closed or errors in either direction.
 async fn pump(mut reader: OwnedReadHalf, mut writer: OwnedWriteHalf, notify: Arc<Notify>) {
     let mut buf = [0u8; READ_BUFFER_SIZE];
     loop {

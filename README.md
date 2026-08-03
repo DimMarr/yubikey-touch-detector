@@ -4,34 +4,29 @@ Detects when a YubiKey is waiting for a physical touch, and broadcasts that
 state to other programs (status bars, desktop notifications) over a Unix
 socket and D-Bus.
 
-This project is a from-scratch Rust reimplementation, **based on the design
-of [maximbaz/yubikey-touch-detector](https://github.com/maximbaz/yubikey-touch-detector)**
-by Maxim Baz. It is an independent rewrite, not affiliated with or endorsed
-by the original author — see [Acknowledgements](#acknowledgements) below.
+## Why this exists
 
-## Why a rewrite?
+Touch-protected YubiKey operations — GPG signing/decryption, SSH
+authentication, U2F/FIDO2, HMAC challenge-response — block silently while
+waiting for a physical touch, with no indication to the user beyond a
+blinking LED they may not be looking at. `yubikey-touch-detector` watches
+for that wait across all four mechanisms and broadcasts a simple on/off
+signal that status bars, desktop notifications, or any other tool can react
+to.
 
-The original Go tool has no native Fedora or Debian packaging, in large part
-because it links against `libgpgme` (via the `gpgme-devel` C library) to
-talk to `gpg-agent`. That C dependency makes it awkward to package natively
-across distros, and it's the actual motivating pain point for this rewrite.
+It ships as a single, dependency-light Rust binary with no
+`libgpgme`/`gpgme-devel` C dependency: the small slice of the Assuan
+protocol needed to talk to `gpg-agent` is implemented natively in pure Rust
+(see [How it works](#how-it-works)), so it installs cleanly on Fedora,
+Debian/Ubuntu, Arch, or via `cargo install` anywhere else, with no C build
+toolchain or native library required.
 
-`yubikey-touch-detector` reimplements the same detection design — GPG busy
-checking, SSH agent-forwarding proxying, U2F/FIDO2 HID report reading, and
-HMAC device-presence watching — as a single dependency-light Rust binary,
-using a small pure-Rust Assuan client (see [How it works](#how-it-works))
-instead of linking `libgpgme`. That removes the main native-packaging
-blocker, and lets a single static-ish binary install cleanly on Fedora,
-Debian/Ubuntu, Arch, or via `cargo install` anywhere else.
+Desktop notifications via libnotify are on by default, so a touch-wait
+indicator works out of the box.
 
-It also flips one default: desktop notifications via libnotify are **on by
-default** now, rather than an opt-in flag most users never discovered.
-
-None of the underlying detection techniques are new inventions — they're
-dictated by how Linux and the YubiKey actually expose this state (Assuan
-protocol, hidraw ioctls, sysfs uevents, ssh-agent socket forwarding), so
-they're intentionally the same mechanisms as the original project, just
-reimplemented in Rust.
+The detection techniques themselves aren't arbitrary choices — they're
+dictated by how Linux and the YubiKey actually expose this state: the Assuan
+protocol, hidraw ioctls, sysfs uevents, and ssh-agent socket forwarding.
 
 ## Installation
 
@@ -120,7 +115,7 @@ libnotify, stdout) fan out to.
 ### GPG (Assuan busy-check)
 
 `gpg-agent` doesn't expose "waiting for touch" directly, so the GPG detector
-uses the same heuristic as the original project: it watches the
+uses a busy-check heuristic: it watches the
 `private-keys-v1.d/*` files that back a hardware-shadowed key for `OPEN`
 events (gpg-agent opens one of these right before talking to the card), then
 sends a `LEARN` command to gpg-agent over the Assuan protocol with a short
@@ -132,9 +127,9 @@ This talks to gpg-agent using a small, pure-Rust Assuan client
 Assuan is a simple newline-delimited text protocol — a greeting on connect, a
 command line, and a terminating `OK`/`ERR` status line — so a minimal client
 implementing just enough of it (plus a no-op reply to `INQUIRE`) removes the
-`gpgme-devel` C build dependency entirely. That dependency is the actual
-motivating pain point for this whole rewrite (see
-[Why a rewrite?](#why-a-rewrite)). Socket and home-directory discovery
+`gpgme-devel` C build dependency entirely, which is what keeps this binary
+free of a C build toolchain requirement (see
+[Why this exists](#why-this-exists)). Socket and home-directory discovery
 (`gpgconf` first, falling back to `$GNUPGHOME`/`$XDG_RUNTIME_DIR`
 conventions) lives in [`src/assuan/discovery.rs`](src/assuan/discovery.rs).
 
@@ -183,9 +178,9 @@ See [`src/detector/hmac.rs`](src/detector/hmac.rs).
 
 ## Integrating with other UI components
 
-Both integration surfaces below are deliberately compatible with the
-original project's, so existing status-bar integrations (py3status, waybar,
-i3status-rust, etc.) keep working unmodified.
+Both integration surfaces below are stable, so status-bar integrations
+(py3status, waybar, i3status-rust, etc.) can build on them without worrying
+about the wire format or socket path changing between releases.
 
 ### Unix socket
 
@@ -193,7 +188,7 @@ A socket is created at `$XDG_RUNTIME_DIR/yubikey-touch-detector.socket` (or
 taken over directly via systemd socket activation, when launched through the
 bundled [`yubikey-touch-detector.socket`](yubikey-touch-detector.socket)
 unit). Every connected client receives every event, broadcast as a fixed
-5-byte ASCII frame, unmodified from the original project's wire format:
+5-byte ASCII frame:
 
 | Message | Meaning |
 | --- | --- |
@@ -217,13 +212,6 @@ any other D-Bus property:
 - **Name**: `io.github.dimmarr.YubikeyTouchDetector`
 - **Path**: `/io/github/dimmarr/YubikeyTouchDetector`
 - **Properties**: `GPGState`, `U2FState`, `HMACState` (each `0` or `1`)
-
-This name is rebranded from the original Go project's
-`com.github.maximbaz.YubikeyTouchDetector` (reverse-DNS convention for a
-GitHub-hosted project under a different owner) — a deliberate, one-surface
-compatibility break. The unix socket path and wire format above are
-unchanged, so this is the only integration point that needs updating if
-you're migrating a D-Bus-based integration from the original tool.
 
 See [`src/notifier/dbus.rs`](src/notifier/dbus.rs).
 
@@ -254,15 +242,3 @@ Licensed under either of
 - [Apache License, Version 2.0](LICENSE-APACHE)
 
 at your option.
-
-## Acknowledgements
-
-This project exists because of the design work done in
-[maximbaz/yubikey-touch-detector](https://github.com/maximbaz/yubikey-touch-detector)
-by Maxim Baz. Every detection technique used here — the Assuan busy-check,
-hidraw HID report reading, ssh-agent socket proxying, sysfs device
-watching — reimplements an approach pioneered there. This is a ground-up
-Rust rewrite (no original code was copied) undertaken to remove a C build
-dependency that stood in the way of native distro packaging, not a
-disagreement with the original design. If you're looking for the original,
-actively maintained Go implementation, it's linked above.

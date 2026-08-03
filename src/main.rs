@@ -31,8 +31,8 @@ async fn main() {
     let bus = Bus::new();
 
     // Notifiers. debug/stdout/dbus/libnotify are simply abandoned at
-    // shutdown, same as the original implementation (only the unix socket
-    // notifier and the SSH proxy get graceful cleanup, tracked below).
+    // shutdown (only the unix socket notifier and the SSH proxy get
+    // graceful cleanup, tracked below).
     if config.verbose {
         tokio::spawn(notifier::debug::watch(bus.clone()));
     }
@@ -55,14 +55,12 @@ async fn main() {
     }
 
     // Detectors. U2F/HMAC are also abandoned at shutdown (their per-device
-    // reads have no reliable early-interrupt short of process exit, same
-    // as the original's per-device goroutines).
+    // reads have no reliable early-interrupt short of process exit).
     tokio::spawn(detector::u2f::watch(bus.clone(), shutdown.token()));
     tokio::spawn(detector::hmac::watch(bus.clone(), shutdown.token()));
 
     // GPG and the SSH forwarded-agent proxy share the same busy-check
-    // trigger, so SSH is only started when GPG detection could be set up -
-    // matching the original, which gates both on the same gpgme context.
+    // trigger, so SSH is only started when GPG detection could be set up.
     if let Some(notify) = detector::gpg::try_init(bus.clone(), shutdown.token())
         && let Some(ssh_socket) = detector::ssh::discover_ssh_auth_sock()
     {

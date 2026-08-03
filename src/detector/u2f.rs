@@ -24,7 +24,7 @@ use crate::detector::hid_descriptor::is_fido_u2f_device;
 use crate::message::Message;
 
 /// Devices are given this long to finish initializing before being
-/// re-checked, matching the original implementation.
+/// re-checked.
 const DEVICE_INIT_DELAY: Duration = Duration::from_secs(1);
 /// After a touch-needed message, wait this long without further such
 /// messages before declaring the touch wait over.
@@ -46,12 +46,11 @@ const U2F_SW_CONDITIONS_NOT_SATISFIED: u16 = 0x6985;
 /// Watches `/dev` for newly connected FIDO U2F/CTAP hidraw devices (as well
 /// as ones already present at startup) and spawns a reader for each.
 ///
-/// Deviates from the original implementation in one deliberate way: newly
-/// created devices are checked concurrently (each on its own spawned task,
-/// after the same 1s settle delay) rather than sequentially in the single
-/// event-processing loop. The original blocks that whole loop for 1s per
-/// `/dev` creation event, serializing unrelated devices for no correctness
-/// reason; nothing here depends on that ordering.
+/// Newly created devices are checked concurrently (each on its own spawned
+/// task, after the same 1s settle delay) rather than sequentially in the
+/// single event-processing loop, so one `/dev` creation event's 1s settle
+/// delay doesn't serialize unrelated devices behind it; nothing here
+/// depends on that ordering.
 pub async fn watch(bus: Bus, shutdown: CancellationToken) {
     if let Ok(entries) = std::fs::read_dir("/dev") {
         for entry in entries.flatten() {
@@ -119,10 +118,9 @@ fn spawn_device_reader(path: PathBuf, bus: Bus) {
 }
 
 /// Blocking per-device reader loop. Not part of the graceful-shutdown
-/// join set (same as the original implementation): it's a blocking read on
-/// a hidraw device with no reliable way to interrupt it early other than
-/// process exit, so it's simply abandoned at shutdown like the original's
-/// per-device goroutines are.
+/// join set: it's a blocking read on a hidraw device with no reliable way
+/// to interrupt it early other than process exit, so it's simply abandoned
+/// at shutdown.
 fn run_device_reader(path: &Path, bus: &Bus) {
     let file = match std::fs::File::open(path) {
         Ok(file) => file,

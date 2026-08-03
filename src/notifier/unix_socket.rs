@@ -2,8 +2,7 @@
 //! integrate with (status bars via py3status, waybar, ...). Broadcasts every
 //! `Message`'s wire bytes, unmodified, to every connected client - this is a
 //! compatibility surface with existing consumers, so the wire format and
-//! socket path convention are reproduced exactly from the original Go
-//! implementation.
+//! socket path convention are kept stable across releases.
 //!
 //! Supports systemd socket activation: if the process was launched by a
 //! `.socket` unit, the already-bound-and-listening file descriptor it passed
@@ -90,10 +89,9 @@ fn try_systemd_activation() -> Option<io::Result<tokio::net::UnixListener>> {
 }
 
 /// Binds `socket_path` ourselves, first clearing away any stale socket file
-/// left behind by a previous crash (matching the original implementation's
-/// crash recovery - simpler here than the SSH proxy's rename dance since
-/// there's nothing to preserve, just a dead file to remove before binding
-/// fresh).
+/// left behind by a previous crash - simpler here than the SSH proxy's
+/// rename dance since there's nothing to preserve, just a dead file to
+/// remove before binding fresh.
 fn bind_manual(socket_path: &Path) -> io::Result<tokio::net::UnixListener> {
     if socket_path.exists() {
         warn!(

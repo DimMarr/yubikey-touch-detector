@@ -49,9 +49,8 @@ Detects when a YubiKey is waiting for a physical touch confirmation (GPG, \
 U2F/FIDO2, or HMAC-SECRET) and notifies other programs about it over a unix \
 socket, D-Bus, libnotify desktop notifications, or stdout.
 .
-This is a from-scratch Rust rewrite of maximbaz/yubikey-touch-detector. \
-Unlike the original Go implementation, it does not link libgpgme/gpgme-devel \
-at all: the gpg-agent Assuan protocol bits it needs are reimplemented \
+This is a dependency-light Rust binary that does not link libgpgme/gpgme-devel \
+at all: the gpg-agent Assuan protocol bits it needs are implemented \
 natively in Rust (see src/assuan/), so this package has no gpgme-related \
 build or runtime dependency whatsoever."""
 

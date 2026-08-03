@@ -2,9 +2,7 @@
 //! `.git-archival.txt` when building from a GitHub-generated source
 //! tarball (no `.git` directory, but `export-subst` in `.gitattributes`
 //! has expanded the placeholder into a real value), and finally to
-//! `"unknown"` - mirrors the original Go implementation's exact mechanism
-//! (`-ldflags "-X main.version=$(git describe)"` for normal builds, a
-//! `$Format:%(describe)$` `export-subst` placeholder for archive builds).
+//! `"unknown"`.
 
 use std::process::Command;
 

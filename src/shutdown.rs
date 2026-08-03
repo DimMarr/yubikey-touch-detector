@@ -1,14 +1,10 @@
 //! Graceful shutdown coordination.
 //!
-//! Replaces the Go original's `exits *sync.Map` (a name -> exit-channel
-//! registry, iterated on SIGINT/SIGTERM, each entry required to confirm
-//! before the process exits). A single root [`tokio_util::sync::CancellationToken`]
-//! plays the same "observe shutdown" role for every task; the handful of
-//! tasks with cleanup that must run before exit (the SSH proxy restoring
-//! the original socket, the unix socket notifier removing its socket file)
-//! are joined explicitly with a bounded timeout, so a stuck cleanup can no
-//! longer hang shutdown forever the way the Go original's unconditional
-//! wait could.
+//! A single root [`tokio_util::sync::CancellationToken`] signals shutdown
+//! to every task; the handful of tasks with cleanup that must run before
+//! exit (the SSH proxy restoring the original socket, the unix socket
+//! notifier removing its socket file) are joined explicitly with a bounded
+//! timeout, so a stuck cleanup can't hang shutdown forever.
 
 use std::time::Duration;
 

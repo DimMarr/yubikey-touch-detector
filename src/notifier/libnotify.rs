@@ -1,8 +1,6 @@
 //! Desktop notification notifier, via `org.freedesktop.Notifications`.
 //!
-//! Enabled **by default** in this rewrite (see `Config.libnotify`) - in the
-//! original Go implementation this was an opt-in flag, which was itself the
-//! usability complaint that motivated the whole project: touch-wait
+//! Enabled **by default** (see `Config.libnotify`): touch-wait
 //! notifications are exactly the kind of thing a new user expects to just
 //! work, not something to discover in a `--help` listing.
 //!
@@ -69,9 +67,9 @@ impl Session {
     /// Connects to the session bus and starts watching `NotificationClosed`,
     /// resetting `replaces_id` to `0` whenever the notification it currently
     /// tracks is closed - whether by us (`close`) or by the user dismissing
-    /// it. This is the *only* place `replaces_id` is ever reset: mirrors the
-    /// original implementation, which relies solely on this same signal
-    /// rather than also clearing it right after a successful `close` call.
+    /// it. This is the *only* place `replaces_id` is ever reset: this relies
+    /// solely on this same signal rather than also clearing it right after
+    /// a successful `close` call.
     async fn connect(replaces_id: Arc<AtomicU32>) -> Option<Self> {
         let connection = match Connection::session().await {
             Ok(connection) => connection,
@@ -170,7 +168,7 @@ pub async fn watch(bus: Bus) {
                     // Only ever transitions 0 -> id: once a notification is
                     // showing, subsequent updates reuse the same id (the
                     // notification server is expected to keep returning it
-                    // for a `replaces_id` call), matching the original.
+                    // for a `replaces_id` call).
                     let _ = replaces_id.compare_exchange(0, id, Ordering::SeqCst, Ordering::SeqCst);
                 }
                 Err(err) => {

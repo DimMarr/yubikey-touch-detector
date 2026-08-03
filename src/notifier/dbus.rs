@@ -1,15 +1,11 @@
 //! Custom D-Bus server notifier: exposes the current touch-wait state as
-//! three properties on a session-bus service, for other programs to read or
-//! observe via the standard `org.freedesktop.DBus.Properties` mechanism
-//! (`PropertiesChanged` signal, introspection).
+//! three properties (`GPGState`/`U2FState`/`HMACState`, each `0` or `1`) on
+//! a session-bus service, for other programs to read or observe via the
+//! standard `org.freedesktop.DBus.Properties` mechanism (`PropertiesChanged`
+//! signal, introspection).
 //!
-//! Rebranded from the original Go implementation's
-//! `com.github.maximbaz.YubikeyTouchDetector` to
-//! `io.github.dimmarr.YubikeyTouchDetector` (reverse-DNS convention for a
-//! GitHub-hosted project under a different owner) - this is a deliberate
-//! compatibility break for this one surface, unlike the unix socket
-//! notifier's wire format and path, which are unchanged. Property names
-//! (`GPGState`/`U2FState`/`HMACState`) and semantics (`0`/`1`) are preserved.
+//! The service name `io.github.dimmarr.YubikeyTouchDetector` follows the
+//! reverse-DNS convention for a GitHub-hosted project.
 
 use tokio_util::sync::CancellationToken;
 use tracing::{debug, error};
